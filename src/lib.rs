@@ -6,3 +6,4 @@
 pub mod adjunction;
 pub mod comonad;
 pub mod monad;
+pub mod distributional;
