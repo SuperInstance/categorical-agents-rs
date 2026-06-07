@@ -1,0 +1,75 @@
+[crate]
+name = "categorical-agents-rs"
+version = "0.1.0"
+layer = "composition"
+description = "Category-theoretic abstractions for agent composition: adjunctions, monads, and comonads"
+
+[provides]
+capabilities = [
+  { name = "adjunction", type = "module", description = "Adjunctions between categories with unit/counit natural transformations and hom-set isomorphism" },
+  { name = "monad", type = "module", description = "List monad with return/bind/fmap, do-notation simulation, and monad transformer pattern" },
+  { name = "comonad", type = "module", description = "Stream comonad with extract/duplicate/extend for context-dependent agent computations" },
+  { name = "morphism", type = "struct", description = "Labeled morphism wrapper for category arrows with composition" }
+]
+exports = [
+  "adjunction::Adjunction",
+  "adjunction::Morphism",
+  "monad::ListMonad",
+  "monad::MonadTransformer",
+  "comonad::StreamComonad",
+  "comonad::EnvComonad"
+]
+
+[requires]
+optional = [
+  { crate = "wasserstein-agents-rs", reason = "Transport plans between agent distributions via categorical morphisms", import = "transport::OptimalTransport" },
+  { crate = "agent-manifest-rs", reason = "Agent type registry for categorical composition", import = "manifest::AgentManifest" }
+]
+
+[integrates.wasserstein_agents]
+crate = "wasserstein-agents-rs"
+module = "adjunction"
+description = "Optimal transport as a categorical adjunction: lift transport plans into monadic agent composition"
+human_steps = [
+  "1. cargo add wasserstein-agents",
+  "2. Create Morphism from transport plan",
+  "3. Compose transport morphisms via adjunction"
+]
+agent_steps = [
+  "Compute OptimalTransport plan via wasserstein-agents",
+  "Wrap transport plan as Morphism in categorical-agents",
+  "Compose multiple transport steps via monadic bind",
+  "Extract final distribution via comonad extract"
+]
+
+[onboarding.human]
+quick_start = "cargo add categorical-agents-rs"
+example = """
+use categorical_agents_rs::monad::ListMonad;
+use categorical_agents_rs::comonad::StreamComonad;
+
+// List monad: non-deterministic computation
+let result = ListMonad::return_(42)
+    .bind(|x| ListMonad(vec![x, x + 1]))
+    .bind(|x| ListMonad(vec![x * 2]));
+// result = [84, 86]
+
+// Stream comonad: context-dependent computation
+let stream = StreamComonad::new(1, vec![2, 3, 4]);
+assert_eq!(stream.extract(), 1); // Focus on current
+"""
+
+[onboarding.agent]
+context_needed = ["agent_types", "composition_pattern", "context_depth"]
+api_surface = [
+  "Morphism::new(label, f)",
+  "Adjunction::new(left, right, unit, counit)",
+  "ListMonad::return_(value)",
+  "ListMonad::bind(f)",
+  "ListMonad::fmap(f)",
+  "StreamComonad::new(focus, tail)",
+  "StreamComonad::extract()",
+  "StreamComonad::duplicate()",
+  "StreamComonad::extend(f)"
+]
+integration_pattern = "Model agents as morphisms, compose them via monadic bind for non-deterministic behavior, use comonads for context-aware agents. Adjunctions provide free/forgetful functor pairs between agent categories."
